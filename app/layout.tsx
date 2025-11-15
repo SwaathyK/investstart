@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: 'A simple, friendly platform that helps students learn micro-investing using gamified learning, mini-courses, and virtual practice investing.',
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function RootLayout({
   children,
 }: {

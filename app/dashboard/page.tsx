@@ -22,6 +22,8 @@ import {
   EyeOff
 } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function Dashboard() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)

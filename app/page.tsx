@@ -5,6 +5,9 @@ import { ArrowRight, BookOpen, Gamepad2, TrendingUp } from 'lucide-react'
 import DailyStreak from '@/components/DailyStreak'
 import Navigation from '@/components/Navigation'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
