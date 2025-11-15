@@ -66,8 +66,6 @@ interface Transaction {
   avgPrice?: number  // Average buy price for sell transactions
 }
 
-export const dynamic = 'force-dynamic'
-
 export default function SimulationPage() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)

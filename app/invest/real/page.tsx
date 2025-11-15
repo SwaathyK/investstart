@@ -67,8 +67,6 @@ interface Transaction {
   avgPrice?: number  // Average buy price for sell transactions
 }
 
-export const dynamic = 'force-dynamic'
-
 export default function RealMoneyPage() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)

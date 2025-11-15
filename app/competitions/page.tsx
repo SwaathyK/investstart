@@ -50,8 +50,6 @@ interface Clan {
   totalPoints: number
 }
 
-export const dynamic = 'force-dynamic'
-
 export default function CompetitionsPage() {
   const [activeTab, setActiveTab] = useState<'competitions' | 'clans'>('competitions')
   const [filterType, setFilterType] = useState<'all' | 'local' | 'university' | 'monthly'>('all')

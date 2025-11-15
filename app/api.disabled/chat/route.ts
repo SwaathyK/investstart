@@ -6,7 +6,7 @@ import OpenAI from 'openai'
 
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = process.env.OPENAI_API_KEY
+    const apiKey = process.env.OPENAI_API_KEY 
 
     if (!apiKey) {
       console.error('OPENAI_API_KEY is missing from environment variables')

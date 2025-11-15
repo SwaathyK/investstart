@@ -47,36 +47,72 @@ export default function Chatbot() {
     setIsLoading(true)
 
     try {
-      // Call the API route
-      const response = await fetch('/api/chat', {
+      // Call OpenAI API directly from client side
+      const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+
+      if (!apiKey) {
+        throw new Error('OpenAI API key is not configured. Please set NEXT_PUBLIC_OPENAI_API_KEY in environment variables.')
+      }
+
+      const systemMessage = {
+        role: 'system' as const,
+        content: `You are a helpful AI assistant for Brokee, a platform that helps students learn micro-investing through gamified learning, mini-courses, and virtual practice investing.
+
+Your role is to:
+- Help users learn about micro-investing concepts
+- Answer questions about Brokee's features
+- Guide students on getting started
+- Provide simple investing explainers
+- Stay concise, friendly, and encouraging`
+      }
+
+      const formattedMessages = [
+        systemMessage,
+        ...messages.map((msg) => ({
+          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.text
+        })),
+        {
+          role: 'user' as const,
+          content: userMessage.text
+        }
+      ]
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage]
+          model: 'gpt-3.5-turbo',
+          messages: formattedMessages,
+          temperature: 0.7,
+          max_tokens: 500,
         }),
       })
 
-      const data = await response.json()
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to get response')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error?.message || 'Failed to get response from OpenAI')
       }
+
+      const data = await response.json()
+      const botResponseText = data.choices[0]?.message?.content || 'Sorry, I could not generate a response.'
 
       const botResponse: Message = {
         id: messages.length + 2,
-        text: data.message,
+        text: botResponseText,
         sender: 'bot',
         timestamp: new Date()
       }
 
       setMessages(prev => [...prev, botResponse])
     } catch (error: any) {
-      console.error('Error calling ChatGPT API:', error)
+      console.error('Error calling OpenAI API:', error)
       const errorMessage: Message = {
         id: messages.length + 2,
-        text: "Sorry, I'm having trouble connecting right now. Please make sure the OpenAI API key is configured, or try again later.",
+        text: error.message || "Sorry, I'm having trouble connecting right now. Please make sure the OpenAI API key is configured, or try again later.",
         sender: 'bot',
         timestamp: new Date()
       }

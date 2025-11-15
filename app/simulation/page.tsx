@@ -19,8 +19,6 @@ import {
   Trophy
 } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
-
 export default function SimulationPage() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)

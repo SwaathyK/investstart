@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Cloudflare Pages compatibility
-  // Remove standalone output for Cloudflare Pages deployment
+  // Static export configuration for fully client-side app
+  output: 'export',
+  images: {
+    unoptimized: true,
+  },
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
