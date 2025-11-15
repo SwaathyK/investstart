@@ -93,3 +93,4 @@ export default function Watchlist({ stocks, onSelectStock }: WatchlistProps) {
   )
 }
 
+

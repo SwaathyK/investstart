@@ -83,6 +83,24 @@ brokee/
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
+## Deployment
+
+### Cloudflare Pages
+
+This project is configured for deployment on Cloudflare Pages. See [cloudflare-deployment.md](./cloudflare-deployment.md) for detailed deployment instructions.
+
+**Quick Steps:**
+1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
+2. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → Workers & Pages → Create application
+3. Connect your repository and configure:
+   - Framework preset: `Next.js`
+   - Build command: `npm run build`
+   - Build output directory: `.next`
+4. Add environment variable `OPENAI_API_KEY` in Cloudflare Pages settings
+5. Deploy!
+
+Your app will be available at `https://your-project-name.pages.dev`
+
 ## Next Steps
 
 - [ ] Set up authentication system

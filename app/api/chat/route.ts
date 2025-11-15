@@ -1,37 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+export const dynamic = "force-dynamic"  // <-- REQUIRED FIX
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json()
+    const apiKey = process.env.OPENAI_API_KEY
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!apiKey) {
+      console.error('OPENAI_API_KEY is missing from environment variables')
       return NextResponse.json(
-        { error: 'OpenAI API key is not configured' },
+        { 
+          error: 'OpenAI API key is not configured. Please set OPENAI_API_KEY in Cloudflare Pages environment variables.',
+          details: 'The API key must be set in Cloudflare Pages Settings → Environment variables for Production, Preview, and Branch environments.'
+        },
         { status: 500 }
       )
     }
 
-    // Create a system message to give context about Brokee
+    const openai = new OpenAI({ apiKey })
+
+    const { messages } = await request.json()
+
     const systemMessage = {
       role: 'system' as const,
-      content: `You are a helpful AI assistant for Brokee, a platform that helps students learn micro-investing through gamified learning, mini-courses, and virtual practice investing. 
+      content: `You are a helpful AI assistant for Brokee, a platform that helps students learn micro-investing through gamified learning, mini-courses, and virtual practice investing.
 
 Your role is to:
 - Help users learn about micro-investing concepts
-- Answer questions about Brokee's features (courses, virtual practice, gamification)
-- Guide users on how to get started
-- Provide educational information about investing basics
-- Be friendly, encouraging, and student-focused
-
-Keep responses concise, clear, and helpful. If asked about something outside your knowledge, politely redirect to relevant Brokee features or suggest they contact support.`
+- Answer questions about Brokee's features
+- Guide students on getting started
+- Provide simple investing explainers
+- Stay concise, friendly, and encouraging`
     }
 
-    // Format messages for OpenAI (convert to OpenAI format)
     const formattedMessages = [
       systemMessage,
       ...messages.map((msg: { text: string; sender: string }) => ({
@@ -47,7 +49,8 @@ Keep responses concise, clear, and helpful. If asked about something outside you
       max_tokens: 500,
     })
 
-    const response = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.'
+    const response = completion.choices[0]?.message?.content 
+      || 'Sorry, I could not generate a response.'
 
     return NextResponse.json({ message: response })
   } catch (error: any) {
@@ -58,4 +61,3 @@ Keep responses concise, clear, and helpful. If asked about something outside you
     )
   }
 }
-

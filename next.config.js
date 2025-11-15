@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
-  // Disable static optimization to avoid build errors with Client Components
+  // Cloudflare Pages compatibility
+  // Remove standalone output for Cloudflare Pages deployment
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
