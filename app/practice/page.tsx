@@ -4,8 +4,6 @@ import Link from 'next/link'
 import { DollarSign } from 'lucide-react'
 import Navigation from '@/components/Navigation'
 
-export const dynamic = 'force-dynamic'
-
 export default function PracticePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">

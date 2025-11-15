@@ -28,8 +28,6 @@ const trackIcons: Record<string, any> = {
   '🛠️': Wrench,
 }
 
-export const dynamic = 'force-dynamic'
-
 export default function CoursesPage() {
   const [completedModules, setCompletedModules] = useState<number[]>([])
   const [expandedTracks, setExpandedTracks] = useState<number[]>([])
