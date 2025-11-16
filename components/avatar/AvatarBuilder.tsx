@@ -288,17 +288,17 @@ export function AvatarBuilder() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center px-6">
+      <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-6">
         <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-md">
           <Loader2 className="h-5 w-5 animate-spin text-primary-500" />
           <span className="text-sm font-medium text-gray-700">Loading avatar studio…</span>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-4 py-10 lg:flex-row">
+    <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 lg:flex-row">
       <section className="w-full rounded-3xl border border-gray-200 bg-white/80 p-6 shadow-xl lg:w-1/2">
         <header className="flex items-center justify-between gap-4">
           <div>

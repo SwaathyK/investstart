@@ -17,7 +17,9 @@ import {
   DollarSign
 } from 'lucide-react'
 import Navigation from '@/components/Navigation'
-import { coursesData, simulationScenarios, type Track, type Module } from '@/data/courses'
+import ModuleLearningModal from '@/components/ModuleLearningModal'
+import SimulationModal from '@/components/SimulationModal'
+import { coursesData, simulationScenarios, type Track, type Module, type SimulationScenario } from '@/data/courses'
 
 const trackIcons: Record<string, any> = {
   '💰': DollarSign,
@@ -32,6 +34,10 @@ export default function CoursesPage() {
   const [completedModules, setCompletedModules] = useState<number[]>([])
   const [expandedTracks, setExpandedTracks] = useState<number[]>([])
   const [activeTab, setActiveTab] = useState<'courses' | 'simulations'>('courses')
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedScenario, setSelectedScenario] = useState<SimulationScenario | null>(null)
+  const [isSimulationModalOpen, setIsSimulationModalOpen] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -41,6 +47,11 @@ export default function CoursesPage() {
       }
     }
   }, [])
+
+  const handleStartModule = (module: Module) => {
+    setSelectedModule(module)
+    setIsModalOpen(true)
+  }
 
   const handleCompleteModule = (moduleId: number) => {
     if (!completedModules.includes(moduleId)) {
@@ -53,6 +64,21 @@ export default function CoursesPage() {
         window.dispatchEvent(new Event('courseCompleted'))
       }
     }
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedModule(null)
+  }
+
+  const handleStartSimulation = (scenario: SimulationScenario) => {
+    setSelectedScenario(scenario)
+    setIsSimulationModalOpen(true)
+  }
+
+  const handleCloseSimulationModal = () => {
+    setIsSimulationModalOpen(false)
+    setSelectedScenario(null)
   }
 
   const toggleTrack = (trackId: number) => {
@@ -237,7 +263,7 @@ export default function CoursesPage() {
                               </div>
                             ) : (
                               <button
-                                onClick={() => handleCompleteModule(module.id)}
+                                onClick={() => handleStartModule(module)}
                                 className="w-full bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-semibold flex items-center justify-center gap-2"
                               >
                                 <Play className="h-4 w-4" />
@@ -293,19 +319,34 @@ export default function CoursesPage() {
                         </div>
                       </div>
                     </div>
-                    <Link
-                      href={`/practice?scenario=${scenario.id}`}
+                    <button
+                      onClick={() => handleStartSimulation(scenario)}
                       className="w-full bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-semibold flex items-center justify-center gap-2"
                     >
                       <Play className="h-4 w-4" />
                       Start Simulation
-                    </Link>
+                    </button>
                   </div>
                 )
               })}
             </div>
           </div>
         )}
+
+        {/* Module Learning Modal */}
+        <ModuleLearningModal
+          module={selectedModule}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onComplete={handleCompleteModule}
+        />
+
+        {/* Simulation Modal */}
+        <SimulationModal
+          scenario={selectedScenario}
+          isOpen={isSimulationModalOpen}
+          onClose={handleCloseSimulationModal}
+        />
       </div>
     </div>
   )
