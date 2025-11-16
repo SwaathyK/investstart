@@ -36,10 +36,9 @@ const config: Config = {
           800: '#86198f',
           900: '#701a75',
         },
-      },
+      }
     },
   },
   plugins: [],
 }
 export default config
-
