@@ -366,11 +366,11 @@ export default function Dashboard() {
                         <div className="flex items-center space-x-3 flex-1">
                           <div 
                             className={`w-4 h-4 rounded transition-all ${
-                              isSelected ? 'w-5 h-5 ring-2 ring-offset-2' : ''
+                              isSelected ? 'w-5 h-5 outline outline-2 outline-offset-2' : ''
                             }`}
                             style={{ 
                               backgroundColor: categoryColors[category],
-                              ringColor: categoryColors[category]
+                              outlineColor: categoryColors[category]
                             }}
                           ></div>
                           <span className={`font-medium ${isSelected ? 'text-gray-900 font-semibold' : 'text-gray-900'}`}>
