@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Dice3, Loader2, RefreshCcw, Save } from "lucide-react";
+import { Dice3, Loader2, RefreshCcw, Save, CheckCircle2, Sparkles, X } from "lucide-react";
 import type { AvatarConfig, AvatarApiResponse, Outfit } from "@/types/avatar";
 import { defaultAvatarConfig } from "@/data/avatar";
 
@@ -159,6 +159,7 @@ export function AvatarBuilder() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [baseConfig, setBaseConfig] = useState<AvatarConfig>(defaultAvatarConfig);
   const [savedConfig, setSavedConfig] = useState<AvatarConfig>(defaultAvatarConfig);
   const [selectedOutfitId, setSelectedOutfitId] = useState<string | null>(null);
@@ -207,6 +208,14 @@ export function AvatarBuilder() {
     return () => window.clearTimeout(timer);
   }, [banner]);
 
+  useEffect(() => {
+    if (showSuccessModal) {
+      // Auto-close after 5 seconds
+      const timer = window.setTimeout(() => setShowSuccessModal(false), 5000);
+      return () => window.clearTimeout(timer);
+    }
+  }, [showSuccessModal]);
+
   const selectedOutfit = useMemo(
     () => outfits.find((outfit) => outfit.id === selectedOutfitId),
     [outfits, selectedOutfitId]
@@ -217,16 +226,41 @@ export function AvatarBuilder() {
     [baseConfig, selectedOutfit]
   );
 
+  const savedOutfit = useMemo(
+    () => outfits.find((outfit) => outfit.id === savedOutfitId),
+    [outfits, savedOutfitId]
+  );
+
+  const savedAppliedConfig = useMemo(
+    () => mergeConfig(savedConfig, savedOutfit),
+    [savedConfig, savedOutfit]
+  );
+
   const unlockedSet = useMemo(() => new Set(unlockedOutfitIds), [unlockedOutfitIds]);
 
   const hasUnsavedChanges =
     JSON.stringify(baseConfig) !== JSON.stringify(savedConfig) || selectedOutfitId !== savedOutfitId;
 
   const handleUpdate = (field: keyof AvatarConfig, value: string) => {
-    setBaseConfig((prev) => ({
-      ...prev,
-      [field]: value
-    }));
+    setBaseConfig((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value
+      };
+      
+      // If clothing type changes to non-GraphicShirt, keep graphicType but it won't display
+      // If clothing type changes to GraphicShirt, ensure graphicType is set
+      if (field === 'clotheType') {
+        if (value !== 'GraphicShirt' && prev.clotheType === 'GraphicShirt') {
+          // Switching away from GraphicShirt - graphic will be hidden but value preserved
+        } else if (value === 'GraphicShirt' && !prev.graphicType) {
+          // Switching to GraphicShirt - set a default graphic if none exists
+          updated.graphicType = 'Diamond';
+        }
+      }
+      
+      return updated;
+    });
   };
 
   const randomize = () => {
@@ -274,6 +308,9 @@ export function AvatarBuilder() {
       setUnlockedOutfitIds(payload.unlockedOutfitIds ?? unlockedOutfitIds);
       setSavedAt(payload.savedAt ?? new Date().toISOString());
       setBanner("Avatar saved!");
+      
+      // Show success modal with animation
+      setShowSuccessModal(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
@@ -359,22 +396,41 @@ export function AvatarBuilder() {
       <section className="flex flex-1 flex-col gap-6 rounded-3xl border border-gray-200 bg-white/80 p-6 shadow-xl">
         <h2 className="text-2xl font-semibold text-gray-900">Style controls</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {optionGroups.map((group) => (
-            <label key={group.title} className="flex flex-col gap-2 rounded-2xl border border-gray-200 bg-gray-50/70 p-4 text-sm text-gray-700">
-              <span className="text-xs uppercase tracking-wide text-gray-500">{group.title}</span>
-              <select
-                className="rounded-xl border border-gray-300 px-3 py-2 text-base font-medium text-gray-900 focus:border-gray-900 focus:outline-none"
-                value={baseConfig[group.field]}
-                onChange={(event) => handleUpdate(group.field, event.target.value)}
+          {optionGroups.map((group) => {
+            const isGraphicOption = group.field === 'graphicType';
+            const isGraphicShirt = baseConfig.clotheType === 'GraphicShirt';
+            const isDisabled = isGraphicOption && !isGraphicShirt;
+            
+            return (
+              <label 
+                key={group.title} 
+                className={`flex flex-col gap-2 rounded-2xl border border-gray-200 p-4 text-sm text-gray-700 ${
+                  isDisabled ? 'bg-gray-100/50 opacity-60' : 'bg-gray-50/70'
+                }`}
               >
-                {group.options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs uppercase tracking-wide text-gray-500">{group.title}</span>
+                  {isGraphicOption && !isGraphicShirt && (
+                    <span className="text-xs text-orange-600 font-medium">Requires Graphic Tee</span>
+                  )}
+                </div>
+                <select
+                  className={`rounded-xl border border-gray-300 px-3 py-2 text-base font-medium text-gray-900 focus:border-gray-900 focus:outline-none ${
+                    isDisabled ? 'cursor-not-allowed bg-gray-100' : ''
+                  }`}
+                  value={baseConfig[group.field]}
+                  onChange={(event) => handleUpdate(group.field, event.target.value)}
+                  disabled={isDisabled}
+                >
+                  {group.options.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            );
+          })}
         </div>
         <div>
           <h3 className="text-xl font-semibold text-gray-900">Course & premium outfits</h3>
@@ -426,6 +482,75 @@ export function AvatarBuilder() {
           </div>
         </div>
       </section>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowSuccessModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Success Icon with Animation */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-75"></div>
+                <div className="relative bg-green-100 rounded-full p-4">
+                  <CheckCircle2 className="h-12 w-12 text-green-600" />
+                </div>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+              Avatar Created Successfully! 🎉
+            </h2>
+            <p className="text-gray-600 text-center mb-6">
+              Your avatar has been saved and is ready to use
+            </p>
+
+            {/* Saved Avatar Preview with Animation */}
+            <div className="bg-gradient-to-br from-primary-50 to-accent-50 rounded-xl p-6 mb-6 border-2 border-primary-200 overflow-hidden">
+              <div className="flex justify-center items-center min-h-[200px]">
+                <div className="transform transition-all duration-500 animate-bounce-slow">
+                  <div className="w-48 h-48 mx-auto flex items-center justify-center">
+                    <AvatarPreview
+                      {...savedAppliedConfig}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
+                <span className="text-sm font-semibold text-gray-700">Your New Avatar</span>
+                <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-semibold flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="h-5 w-5" />
+                Awesome!
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="px-4 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

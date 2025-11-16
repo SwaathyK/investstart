@@ -14,11 +14,17 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
 
-    // Validate credentials
-    const validEmail = 'fahad.khan@warwick.ac.uk'
-    const validPassword = 'warwick123'
+    // Validate credentials - support multiple test accounts
+    const validCredentials = [
+      { email: 'fahad.khan@warwick.ac.uk', password: 'warwick123' },
+      { email: 'test@warwick.ac.uk', password: 'test' }
+    ]
 
-    if (email === validEmail && password === validPassword) {
+    const isValid = validCredentials.some(
+      cred => cred.email === email && cred.password === password
+    )
+
+    if (isValid) {
       // Set logged in status in localStorage
       localStorage.setItem('brokee_logged_in', 'true')
       // Trigger custom event for navigation update and streak popup
