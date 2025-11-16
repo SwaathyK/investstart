@@ -19,13 +19,16 @@ import {
   Award,
   CheckCircle2,
   Eye,
-  EyeOff
+  EyeOff,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 
 export default function Dashboard() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showRealMoney, setShowRealMoney] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   useEffect(() => {
     // Check if user is logged in
@@ -111,6 +114,55 @@ export default function Dashboard() {
   }
 
   const totalInvested = investments.stocks + investments.etfs + investments.isa + investments.bonds
+
+  // Detailed breakdown for each category
+  const investmentDetails = {
+    stocks: [
+      { name: 'Apple Inc. (AAPL)', value: 120.00, shares: 0.8, price: 150.00 },
+      { name: 'Microsoft Corp. (MSFT)', value: 100.00, shares: 0.3, price: 333.33 },
+      { name: 'Amazon.com Inc. (AMZN)', value: 80.00, shares: 0.5, price: 160.00 },
+      { name: 'Tesla Inc. (TSLA)', value: 50.00, shares: 0.2, price: 250.00 }
+    ],
+    etfs: [
+      { name: 'Vanguard S&P 500 ETF (VOO)', value: 200.00, shares: 0.5, price: 400.00 },
+      { name: 'iShares Core MSCI World (SWDA)', value: 120.00, shares: 1.2, price: 100.00 },
+      { name: 'Invesco QQQ Trust (QQQ)', value: 80.00, shares: 0.2, price: 400.00 }
+    ],
+    isa: [
+      { name: 'Stocks ISA Portfolio', value: 150.00, shares: 1.0, price: 150.00 },
+      { name: 'ETFs ISA Holdings', value: 50.00, shares: 0.5, price: 100.00 }
+    ],
+    bonds: [
+      { name: 'UK Government Bond (GILT)', value: 60.00, shares: 0.6, price: 100.00 },
+      { name: 'Corporate Bond Fund', value: 40.00, shares: 0.4, price: 100.00 }
+    ]
+  }
+
+  const categoryColors = {
+    stocks: '#0284c7',
+    etfs: '#c026d3',
+    isa: '#10b981',
+    bonds: '#f59e0b'
+  }
+
+  const categoryBgColors = {
+    stocks: 'bg-blue-50',
+    etfs: 'bg-purple-50',
+    isa: 'bg-green-50',
+    bonds: 'bg-orange-50'
+  }
+
+  const handleCategoryClick = (category: string) => {
+    if (selectedCategory === category) {
+      setSelectedCategory(null)
+    } else {
+      setSelectedCategory(category)
+    }
+  }
+
+  // Pie chart geometry to avoid clipping when stroke width increases
+  const pieRadius = 38
+  const circumference = 2 * Math.PI * pieRadius
 
   const dailyTasks = [
     { id: 1, task: 'Complete a mini-course lesson', points: 50, completed: false },
@@ -215,53 +267,70 @@ export default function Dashboard() {
               <div className="flex items-center justify-center">
                 <div className="relative w-48 h-48">
                   <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                    {/* Background circle */}
                     <circle
                       cx="50"
                       cy="50"
-                      r="40"
+                      r={pieRadius}
                       fill="none"
                       stroke="#e5e7eb"
                       strokeWidth="20"
                     />
+                    {/* Stocks segment */}
                     <circle
                       cx="50"
                       cy="50"
-                      r="40"
+                      r={pieRadius}
                       fill="none"
-                      stroke="#0284c7"
-                      strokeWidth="20"
-                      strokeDasharray={`${(investments.stocks / totalInvested) * 251.2} 251.2`}
+                      stroke={selectedCategory === 'stocks' ? '#0369a1' : '#0284c7'}
+                      strokeWidth={selectedCategory === 'stocks' ? '24' : '20'}
+                      strokeDasharray={`${(investments.stocks / totalInvested) * circumference} ${circumference}`}
                       strokeDashoffset="0"
+                      className="transition-all duration-300 cursor-pointer hover:opacity-80"
+                      style={{ pointerEvents: 'all' }}
+                      onClick={() => handleCategoryClick('stocks')}
                     />
+                    {/* ETFs segment */}
                     <circle
                       cx="50"
                       cy="50"
-                      r="40"
+                      r={pieRadius}
                       fill="none"
-                      stroke="#c026d3"
-                      strokeWidth="20"
-                      strokeDasharray={`${(investments.etfs / totalInvested) * 251.2} 251.2`}
-                      strokeDashoffset={`-${(investments.stocks / totalInvested) * 251.2}`}
+                      stroke={selectedCategory === 'etfs' ? '#a21caf' : '#c026d3'}
+                      strokeWidth={selectedCategory === 'etfs' ? '24' : '20'}
+                      strokeDasharray={`${(investments.etfs / totalInvested) * circumference} ${circumference}`}
+                      strokeDashoffset={`-${(investments.stocks / totalInvested) * circumference}`}
+                      className="transition-all duration-300 cursor-pointer hover:opacity-80"
+                      style={{ pointerEvents: 'all' }}
+                      onClick={() => handleCategoryClick('etfs')}
                     />
+                    {/* ISA segment */}
                     <circle
                       cx="50"
                       cy="50"
-                      r="40"
+                      r={pieRadius}
                       fill="none"
-                      stroke="#10b981"
-                      strokeWidth="20"
-                      strokeDasharray={`${(investments.isa / totalInvested) * 251.2} 251.2`}
-                      strokeDashoffset={`-${((investments.stocks + investments.etfs) / totalInvested) * 251.2}`}
+                      stroke={selectedCategory === 'isa' ? '#059669' : '#10b981'}
+                      strokeWidth={selectedCategory === 'isa' ? '24' : '20'}
+                      strokeDasharray={`${(investments.isa / totalInvested) * circumference} ${circumference}`}
+                      strokeDashoffset={`-${((investments.stocks + investments.etfs) / totalInvested) * circumference}`}
+                      className="transition-all duration-300 cursor-pointer hover:opacity-80"
+                      style={{ pointerEvents: 'all' }}
+                      onClick={() => handleCategoryClick('isa')}
                     />
+                    {/* Bonds segment */}
                     <circle
                       cx="50"
                       cy="50"
-                      r="40"
+                      r={pieRadius}
                       fill="none"
-                      stroke="#f59e0b"
-                      strokeWidth="20"
-                      strokeDasharray={`${(investments.bonds / totalInvested) * 251.2} 251.2`}
-                      strokeDashoffset={`-${((investments.stocks + investments.etfs + investments.isa) / totalInvested) * 251.2}`}
+                      stroke={selectedCategory === 'bonds' ? '#d97706' : '#f59e0b'}
+                      strokeWidth={selectedCategory === 'bonds' ? '24' : '20'}
+                      strokeDasharray={`${(investments.bonds / totalInvested) * circumference} ${circumference}`}
+                      strokeDashoffset={`-${((investments.stocks + investments.etfs + investments.isa) / totalInvested) * circumference}`}
+                      className="transition-all duration-300 cursor-pointer hover:opacity-80"
+                      style={{ pointerEvents: 'all' }}
+                      onClick={() => handleCategoryClick('bonds')}
                     />
                   </svg>
                 </div>
@@ -269,34 +338,85 @@ export default function Dashboard() {
               
               {/* Legend */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-4 h-4 bg-primary-600 rounded"></div>
-                    <span className="font-medium text-gray-900">Stocks</span>
-                  </div>
-                  <span className="font-semibold text-gray-900">£{investments.stocks.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-4 h-4 bg-accent-600 rounded"></div>
-                    <span className="font-medium text-gray-900">ETFs</span>
-                  </div>
-                  <span className="font-semibold text-gray-900">£{investments.etfs.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-4 h-4 bg-green-500 rounded"></div>
-                    <span className="font-medium text-gray-900">ISA</span>
-                  </div>
-                  <span className="font-semibold text-gray-900">£{investments.isa.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-4 h-4 bg-orange-500 rounded"></div>
-                    <span className="font-medium text-gray-900">Bonds</span>
-                  </div>
-                  <span className="font-semibold text-gray-900">£{investments.bonds.toFixed(2)}</span>
-                </div>
+                {(['stocks', 'etfs', 'isa', 'bonds'] as const).map((category) => {
+                  const isSelected = selectedCategory === category
+                  const categoryLabels = {
+                    stocks: 'Stocks',
+                    etfs: 'ETFs',
+                    isa: 'ISA',
+                    bonds: 'Bonds'
+                  }
+                  const categoryColorClasses = {
+                    stocks: 'bg-blue-50 border-blue-200',
+                    etfs: 'bg-purple-50 border-purple-200',
+                    isa: 'bg-green-50 border-green-200',
+                    bonds: 'bg-orange-50 border-orange-200'
+                  }
+                  
+                  return (
+                    <div key={category}>
+                      <div 
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all ${
+                          isSelected 
+                            ? `${categoryColorClasses[category]} border-2 shadow-md` 
+                            : categoryBgColors[category]
+                        }`}
+                        onClick={() => handleCategoryClick(category)}
+                      >
+                        <div className="flex items-center space-x-3 flex-1">
+                          <div 
+                            className={`w-4 h-4 rounded transition-all ${
+                              isSelected ? 'w-5 h-5 ring-2 ring-offset-2' : ''
+                            }`}
+                            style={{ 
+                              backgroundColor: categoryColors[category],
+                              ringColor: categoryColors[category]
+                            }}
+                          ></div>
+                          <span className={`font-medium ${isSelected ? 'text-gray-900 font-semibold' : 'text-gray-900'}`}>
+                            {categoryLabels[category]}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className={`font-semibold ${isSelected ? 'text-gray-900 text-lg' : 'text-gray-900'}`}>
+                            £{investments[category].toFixed(2)}
+                          </span>
+                          {isSelected ? (
+                            <ChevronUp className="h-4 w-4 text-gray-600" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Expanded Breakdown */}
+                      {isSelected && (
+                        <div className={`mt-2 p-4 ${categoryColorClasses[category]} rounded-lg border-2 animate-fade-in`}>
+                          <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">
+                            {categoryLabels[category]} Holdings
+                          </h4>
+                          <div className="space-y-2">
+                            {investmentDetails[category].map((item, idx) => (
+                              <div 
+                                key={idx}
+                                className="flex items-center justify-between p-2 bg-white/60 rounded-lg"
+                              >
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                                  <p className="text-xs text-gray-600">
+                                    {item.shares} shares @ £{item.price.toFixed(2)}
+                                  </p>
+                                </div>
+                                <span className="font-semibold text-gray-900">£{item.value.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+                
                 <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg border-2 border-gray-300">
                   <span className="font-semibold text-gray-900">Total Invested</span>
                   <span className="font-bold text-gray-900">£{totalInvested.toFixed(2)}</span>

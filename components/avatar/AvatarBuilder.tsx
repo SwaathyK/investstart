@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Dice3, Loader2, RefreshCcw, Save, CheckCircle2, Sparkles, X } from "lucide-react";
 import type { AvatarConfig, AvatarApiResponse, Outfit } from "@/types/avatar";
-import { defaultAvatarConfig } from "@/data/avatar";
+import { defaultAvatarConfig, defaultUnlockedOutfitIds, outfits } from "@/data/avatar";
 
 const AvatarPreview = dynamic(() => import("avataaars"), { ssr: false });
 
@@ -173,23 +173,68 @@ export function AvatarBuilder() {
     async function bootstrap() {
       try {
         setLoading(true);
-        const [avatarRes, outfitRes] = await Promise.all([fetch("/api/avatar"), fetch("/api/outfits")]);
-        if (!avatarRes.ok || !outfitRes.ok) {
-          throw new Error("Unable to load avatar studio");
+        
+        // Try to load from API first, fallback to localStorage for static sites
+        try {
+          const [avatarRes, outfitRes] = await Promise.all([
+            fetch("/api/avatar").catch(() => null),
+            fetch("/api/outfits").catch(() => null)
+          ]);
+          
+          if (avatarRes?.ok && outfitRes?.ok) {
+            // API routes available (development or serverless)
+            const avatarPayload = (await avatarRes.json()) as AvatarApiResponse;
+            const outfitsPayload = (await outfitRes.json()) as { outfits: Outfit[] };
+            if (!mounted) return;
+            setBaseConfig(avatarPayload.avatarConfig ?? defaultAvatarConfig);
+            setSavedConfig(avatarPayload.avatarConfig ?? defaultAvatarConfig);
+            setSelectedOutfitId(avatarPayload.selectedOutfitId ?? null);
+            setSavedOutfitId(avatarPayload.selectedOutfitId ?? null);
+            setUnlockedOutfitIds(avatarPayload.unlockedOutfitIds ?? []);
+            setOutfits(outfitsPayload.outfits ?? []);
+            setSavedAt(avatarPayload.savedAt ?? null);
+            return;
+          }
+        } catch (apiError) {
+          // API routes not available, fall through to localStorage
+          console.log("API routes not available, using localStorage");
         }
-        const avatarPayload = (await avatarRes.json()) as AvatarApiResponse;
-        const outfitsPayload = (await outfitRes.json()) as { outfits: Outfit[] };
+        
+        // Fallback to localStorage (for static sites)
+        if (typeof window !== 'undefined') {
+          const savedAvatar = localStorage.getItem('brokee_avatar_config');
+          const savedOutfitId = localStorage.getItem('brokee_avatar_outfit_id');
+          const savedUnlocked = localStorage.getItem('brokee_avatar_unlocked');
+          const savedAtStr = localStorage.getItem('brokee_avatar_saved_at');
+          
+          if (savedAvatar) {
+            const avatarConfig = JSON.parse(savedAvatar) as AvatarConfig;
+            setBaseConfig(avatarConfig);
+            setSavedConfig(avatarConfig);
+          } else {
+            setBaseConfig(defaultAvatarConfig);
+            setSavedConfig(defaultAvatarConfig);
+          }
+          
+          setSelectedOutfitId(savedOutfitId ? savedOutfitId : null);
+          setSavedOutfitId(savedOutfitId ? savedOutfitId : null);
+          setUnlockedOutfitIds(savedUnlocked ? JSON.parse(savedUnlocked) : defaultUnlockedOutfitIds);
+          setSavedAt(savedAtStr);
+        } else {
+          setBaseConfig(defaultAvatarConfig);
+          setSavedConfig(defaultAvatarConfig);
+        }
+        
+        // Load outfits from data file (always available)
+        setOutfits(outfits);
+        
         if (!mounted) return;
-        setBaseConfig(avatarPayload.avatarConfig ?? defaultAvatarConfig);
-        setSavedConfig(avatarPayload.avatarConfig ?? defaultAvatarConfig);
-        setSelectedOutfitId(avatarPayload.selectedOutfitId ?? null);
-        setSavedOutfitId(avatarPayload.selectedOutfitId ?? null);
-        setUnlockedOutfitIds(avatarPayload.unlockedOutfitIds ?? []);
-        setOutfits(outfitsPayload.outfits ?? []);
-        setSavedAt(avatarPayload.savedAt ?? null);
       } catch (err) {
         if (!mounted) return;
-        setError(err instanceof Error ? err.message : "Something went wrong");
+        console.error("Error loading avatar:", err);
+        setBaseConfig(defaultAvatarConfig);
+        setSavedConfig(defaultAvatarConfig);
+        setOutfits(outfits);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -294,19 +339,44 @@ export function AvatarBuilder() {
     try {
       setIsSaving(true);
       setError(null);
-      const response = await fetch("/api/avatar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ avatarConfig: baseConfig, selectedOutfitId })
-      });
-      const payload = (await response.json()) as AvatarApiResponse & { success?: boolean };
-      if (!response.ok || payload.success === false) {
-        throw new Error((payload as { error?: string }).error ?? "Unable to save avatar");
+      
+      // Try API route first, fallback to localStorage for static sites
+      try {
+        const response = await fetch("/api/avatar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ avatarConfig: baseConfig, selectedOutfitId })
+        });
+        
+        if (response.ok) {
+          const payload = (await response.json()) as AvatarApiResponse & { success?: boolean };
+          if (payload.success !== false) {
+            setSavedConfig(payload.avatarConfig ?? baseConfig);
+            setSavedOutfitId(payload.selectedOutfitId ?? null);
+            setUnlockedOutfitIds(payload.unlockedOutfitIds ?? unlockedOutfitIds);
+            setSavedAt(payload.savedAt ?? new Date().toISOString());
+            setBanner("Avatar saved!");
+            setShowSuccessModal(true);
+            setIsSaving(false);
+            return;
+          }
+        }
+      } catch (apiError) {
+        // API route not available, use localStorage fallback
+        console.log("API route not available, saving to localStorage");
       }
-      setSavedConfig(payload.avatarConfig ?? baseConfig);
-      setSavedOutfitId(payload.selectedOutfitId ?? null);
-      setUnlockedOutfitIds(payload.unlockedOutfitIds ?? unlockedOutfitIds);
-      setSavedAt(payload.savedAt ?? new Date().toISOString());
+      
+      // Fallback to localStorage (for static sites)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('brokee_avatar_config', JSON.stringify(baseConfig));
+        localStorage.setItem('brokee_avatar_outfit_id', selectedOutfitId || '');
+        localStorage.setItem('brokee_avatar_unlocked', JSON.stringify(unlockedOutfitIds));
+        localStorage.setItem('brokee_avatar_saved_at', new Date().toISOString());
+      }
+      
+      setSavedConfig(baseConfig);
+      setSavedOutfitId(selectedOutfitId);
+      setSavedAt(new Date().toISOString());
       setBanner("Avatar saved!");
       
       // Show success modal with animation
