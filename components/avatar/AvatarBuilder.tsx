@@ -317,7 +317,6 @@ export function AvatarBuilder() {
         <div className="mt-6 rounded-3xl border border-gray-200 bg-gradient-to-br from-slate-50 to-white p-6 text-center shadow-inner">
           <div className="mx-auto w-60">
             <AvatarPreview
-              avatarStyle="Transparent"
               {...appliedConfig}
             />
           </div>
