@@ -102,7 +102,11 @@ const generateQuizQuestions = (module: Module): QuizQuestion[] => {
 }
 
 // Generate matching pairs for a topic
-const generateMatchingPairs = (topic: Topic, module: Module) => {
+const generateMatchingPairs = (topic: Topic, module: Module): {
+  leftColumn: string[]
+  rightColumn: string[]
+  correctMatches: Record<string, string>
+} => {
   const topicTitle = topic.title.toLowerCase()
   
   // Common matching patterns based on topic keywords
@@ -115,7 +119,7 @@ const generateMatchingPairs = (topic: Topic, module: Module) => {
         'Emergency Fund': '3-6 Months Expenses',
         'Net Worth': 'Assets - Liabilities',
         'Cash Flow': 'Income - Expenses'
-      }
+      } as Record<string, string>
     }
   } else if (topicTitle.includes('stock') || topicTitle.includes('market')) {
     return {
@@ -126,7 +130,7 @@ const generateMatchingPairs = (topic: Topic, module: Module) => {
         'Market Order': 'Immediate Execution',
         'Limit Order': 'Price-Set Execution',
         'Dividend': 'Profit Share'
-      }
+      } as Record<string, string>
     }
   } else if (topicTitle.includes('invest') || topicTitle.includes('portfolio')) {
     return {
@@ -137,7 +141,7 @@ const generateMatchingPairs = (topic: Topic, module: Module) => {
         'ETF': 'Exchange-Traded',
         'Diversification': 'Risk Reduction',
         'Asset Allocation': 'Portfolio Mix'
-      }
+      } as Record<string, string>
     }
   } else if (topicTitle.includes('risk') || topicTitle.includes('reward')) {
     return {
@@ -148,7 +152,7 @@ const generateMatchingPairs = (topic: Topic, module: Module) => {
         'Low Risk': 'Stable Returns',
         'Risk Tolerance': 'Personal Comfort Level',
         'Risk Management': 'Protection Strategy'
-      }
+      } as Record<string, string>
     }
   } else {
     // Generic matching for other topics
@@ -160,7 +164,7 @@ const generateMatchingPairs = (topic: Topic, module: Module) => {
         'Concept B': 'Definition 2',
         'Concept C': 'Definition 3',
         'Concept D': 'Definition 4'
-      }
+      } as Record<string, string>
     }
   }
 }
